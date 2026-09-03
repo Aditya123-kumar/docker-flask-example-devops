@@ -18,7 +18,7 @@ pipeline {
 
         stage('Deploy Blue-Green') {
             steps {
-                bat 'bash deploy.sh'
+               bat '"C:\\Program Files\\Git\\bin\\bash.exe" deploy.sh'
             }
         }
 
