@@ -1,4 +1,5 @@
+* text=auto
 *.sh text eol=lf
-run text eol=lf
-bin/* text eol=lf
+/run text eol=lf
+Dockerfile text eol=lf
 Jenkinsfile text eol=lf
