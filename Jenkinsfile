@@ -16,11 +16,11 @@ pipeline {
             }
         }
 
-        stage('Deploy Blue-Green') {
-            steps {
-               bat '"C:\\Program Files\\Git\\bin\\bash.exe" deploy.sh'
-            }
-        }
+       stage('Deploy Blue-Green') {
+    steps {
+        bat 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $env:PATH += \';C:\\Users\\CEREBRENT PC\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\'; & \'C:\\Program Files\\Git\\bin\\bash.exe\' deploy.sh }"'
+    }
+}
 
         stage('Verify Deployment') {
             steps {
