@@ -7,10 +7,11 @@ PROJECT_NAME="flask-prod"
 NGINX_CONFIG="nginx/prod.conf"
 STATE_FILE=".active_color"
 
-dc() {
-    docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
-}
+COMPOSE="/c/Users/CEREBRENT PC/AppData/Local/Programs/DockerDesktop/resources/bin/docker-compose.exe"
 
+dc() {
+    "$COMPOSE" -p "$PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
+}
 echo "======================================"
 echo " Zero Downtime Flask Deployment"
 echo "======================================"
