@@ -12,7 +12,7 @@ pipeline {
         stage('Verify Docker') {
             steps {
                 bat 'docker --version'
-                bat 'docker compose version'
+                bat 'docker-compose version'
             }
         }
 
@@ -24,7 +24,7 @@ pipeline {
 
         stage('Verify Deployment') {
             steps {
-                bat 'docker compose -p flask-prod -f docker-compose.prod.yml ps'
+                bat 'docker-compose -p flask-prod -f docker-compose.prod.yml ps'
                 bat 'type .active_color'
             }
         }
