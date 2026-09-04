@@ -10,7 +10,7 @@ STATE_FILE=".active_color"
 COMPOSE="/c/Users/CEREBRENT PC/AppData/Local/Programs/DockerDesktop/resources/bin/docker-compose.exe"
 
 dc() {
-    "$COMPOSE" -p "$PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
+  "$COMPOSE" -p "$PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
 }
 echo "======================================"
 echo " Zero Downtime Flask Deployment"
@@ -21,15 +21,15 @@ echo "======================================"
 # --------------------------------------------------
 
 if [ -f "$STATE_FILE" ]; then
-    CURRENT=$(cat "$STATE_FILE")
+  CURRENT=$(cat "$STATE_FILE")
 else
-    CURRENT="blue"
+  CURRENT="blue"
 fi
 
 if [ "$CURRENT" = "blue" ]; then
-    NEW="green"
+  NEW="green"
 else
-    NEW="blue"
+  NEW="blue"
 fi
 
 echo "Current version : $CURRENT"
@@ -69,16 +69,16 @@ echo "[4/7] Waiting for $NEW to become healthy..."
 HEALTHY=false
 
 for i in {1..30}; do
-    if dc exec -T "web-$NEW" \
-        curl -fsS http://localhost:8000/up/ > /dev/null 2>&1; then
+  if dc exec -T "web-$NEW" \
+    curl -fsS http://localhost:8000/up/ >/dev/null 2>&1; then
 
-        HEALTHY=true
-        echo "Health check: PASSED"
-        break
-    fi
+    HEALTHY=true
+    echo "Health check: PASSED"
+    break
+  fi
 
-    echo "Waiting... ($i/30)"
-    sleep 2
+  echo "Waiting... ($i/30)"
+  sleep 2
 done
 
 # --------------------------------------------------
@@ -86,14 +86,14 @@ done
 # --------------------------------------------------
 
 if [ "$HEALTHY" != "true" ]; then
-    echo ""
-    echo "Health check FAILED!"
-    echo "Rolling back..."
+  echo ""
+  echo "Health check FAILED!"
+  echo "Rolling back..."
 
-    dc stop "web-$NEW"
-    dc rm -f "web-$NEW"
+  dc stop "web-$NEW"
+  dc rm -f "web-$NEW"
 
-    exit 1
+  exit 1
 fi
 
 # --------------------------------------------------
@@ -118,21 +118,21 @@ echo "[6/7] Testing application..."
 
 sleep 2
 
-if curl -fsS http://localhost:8081/up/ > /dev/null; then
-    echo "Traffic switch: PASSED"
+if curl -fsS http://localhost:8081/up/ >/dev/null; then
+  echo "Traffic switch: PASSED"
 else
-    echo "Traffic switch FAILED!"
-    echo "Rolling back to $CURRENT..."
+  echo "Traffic switch FAILED!"
+  echo "Rolling back to $CURRENT..."
 
-    sed -i "s/server web-$NEW:8000;/server web-$CURRENT:8000;/" "$NGINX_CONFIG"
+  sed -i "s/server web-$NEW:8000;/server web-$CURRENT:8000;/" "$NGINX_CONFIG"
 
-    docker exec flask-nginx nginx -t
-    docker exec flask-nginx nginx -s reload
+  docker exec flask-nginx nginx -t
+  docker exec flask-nginx nginx -s reload
 
-    dc stop "web-$NEW"
-    dc rm -f "web-$NEW"
+  dc stop "web-$NEW"
+  dc rm -f "web-$NEW"
 
-    exit 1
+  exit 1
 fi
 
 # --------------------------------------------------
@@ -144,7 +144,7 @@ echo "[7/7] Removing old version..."
 dc stop "web-$CURRENT"
 dc rm -f "web-$CURRENT"
 
-echo "$NEW" > "$STATE_FILE"
+echo "$NEW" >"$STATE_FILE"
 
 echo ""
 echo "======================================"
