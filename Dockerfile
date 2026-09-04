@@ -6,7 +6,7 @@ FROM node:24.20.0-trixie-slim AS assets
 
 WORKDIR /app/assets
 
-ENV NODE_ENV="production"
+ENV NODE_ENV=production
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
@@ -19,15 +19,10 @@ RUN yarn install && yarn cache clean
 
 COPY --chown=node:node . ..
 
-RUN sed -i 's/\r$//' ../run \
-    && chmod +x ../run \
-    && if [ "${NODE_ENV}" != "development" ]; then \
-    ../run yarn:build:js && ../run yarn:build:css; \
-    else \
-    mkdir -p /app/public; \
-    fi
-
-CMD ["bash"]
+RUN mkdir -p /app/public/js /app/public/css \
+    && node esbuild.config.mjs \
+    && npm exec --yes --package=@tailwindcss/cli@4.3.3 -- \
+       tailwindcss -i css/app.css -o ../public/css/app.css --minify
 
 
 ###############################################################################
@@ -38,11 +33,13 @@ FROM python:3.14.7-slim-trixie AS app-build
 
 WORKDIR /app
 
+ENV UV_PROJECT_ENVIRONMENT=/home/python/.local
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    libpq-dev \
+       build-essential \
+       curl \
+       libpq-dev \
     && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
     && apt-get clean
 
@@ -52,7 +49,8 @@ COPY --chown=python:python pyproject.toml uv.lock* ./
 
 COPY --chown=python:python bin/ ./bin
 
-RUN chmod 0755 bin/* && bin/uv-install
+RUN chmod 0755 bin/* \
+    && bin/uv-install
 
 
 ###############################################################################
@@ -69,8 +67,8 @@ ENV PYTHONUNBUFFERED=1 \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    curl \
-    libpq-dev \
+       curl \
+       libpq-dev \
     && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
     && apt-get clean
 
