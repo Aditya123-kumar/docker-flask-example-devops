@@ -35,6 +35,10 @@ WORKDIR /app
 
 ENV UV_PROJECT_ENVIRONMENT=/home/python/.local
 
+# Create application user
+RUN groupadd --system python \
+    && useradd --system --gid python --create-home --home-dir /home/python python
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        build-essential \
@@ -65,6 +69,10 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/home/python/.local/bin:${PATH}"
 
+# Create application user
+RUN groupadd --system python \
+    && useradd --system --gid python --create-home --home-dir /home/python python
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        curl \
@@ -83,5 +91,7 @@ COPY --chown=python:python . .
 RUN if [ "${FLASK_DEBUG}" != "true" ]; then \
     chmod +x bin/*; \
     fi
+
+USER python
 
 ENTRYPOINT ["/app/bin/docker-entrypoint-web"]
