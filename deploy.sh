@@ -50,7 +50,7 @@ dc up -d postgres redis
 
 echo "[2/7] Building application..."
 
-dc build "web-$NEW"
+dc build --no-cache "web-$NEW"
 
 # --------------------------------------------------
 # Start new version
