@@ -175,7 +175,7 @@ yarn:build:css() {
   fi
 
   mkdir -p ../public/css
-  tailwindcss -i css/app.css -o ../public/css/app.css "${args[@]}"
+  yarn exec @tailwindcss/cli -i css/app.css -o ../public/css/app.css "${args[@]}"
 }
 
 clean() {
