@@ -26,10 +26,12 @@ ENV NODE_ENV="${NODE_ENV}" \
 
 COPY --chown=node:node . ..
 
-RUN if [ "${NODE_ENV}" != "development" ]; then \
-  ../run yarn:build:js && ../run yarn:build:css; else mkdir -p /app/public; fi
-
-CMD ["bash"]
+RUN sed -i 's/\r$//' ../run && \
+    chmod +x ../run && \
+    if [ "${NODE_ENV}" != "development" ]; then \
+    ../run yarn:build:js && ../run yarn:build:css; \
+    else mkdir -p /app/public; \
+    fiCMD ["bash"]
 
 ###############################################################################
 
