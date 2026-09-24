@@ -1,14 +1,7 @@
 services:
 
   web-blue:
-    build:
-      context: .
-      target: app
-      args:
-        APP_UID: 1000
-        APP_GID: 1000
-        FLASK_DEBUG: "false"
-        NODE_ENV: production
+    image: ${APP_IMAGE}
     env_file:
       - .env
     environment:
@@ -30,14 +23,7 @@ services:
       start_period: 10s
 
   web-green:
-    build:
-      context: .
-      target: app
-      args:
-        APP_UID: 1000
-        APP_GID: 1000
-        FLASK_DEBUG: "false"
-        NODE_ENV: production
+    image: ${APP_IMAGE}
     env_file:
       - .env
     environment:

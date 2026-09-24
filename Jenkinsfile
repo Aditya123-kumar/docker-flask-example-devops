@@ -10,33 +10,27 @@ pipeline {
         }
 
         stage('Verify Docker') {
-            steps {
-                bat 'docker --version'
-                bat 'docker-compose version'
-            }
-        }
-
-       stage('Deploy Blue-Green') {
     steps {
-        bat 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $env:PATH += \';C:\\Users\\CEREBRENT PC\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\'; & \'C:\\Program Files\\Git\\bin\\bash.exe\' deploy.sh }"'
+        bat 'docker --version'
+        bat 'docker-compose version'
+        bat 'curl.exe http://localhost:5000/v2/'
     }
 }
 
-        stage('Verify Deployment') {
-            steps {
-                bat 'docker-compose -p flask-prod -f docker-compose.prod.yml ps'
-                bat 'type .active_color'
-            }
-        }
+stage('Build Docker Image') {
+    steps {
+        bat 'docker build -t localhost:5000/flask-app:%BUILD_NUMBER% .'
     }
+}
 
-    post {
-        success {
-            echo 'Zero-downtime deployment completed successfully!'
-        }
+stage('Push to Private Registry') {
+    steps {
+        bat 'docker push localhost:5000/flask-app:%BUILD_NUMBER%'
+    }
+}
 
-        failure {
-            echo 'Deployment failed!'
-        }
+stage('Deploy Blue-Green') {
+    steps {
+        bat 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $env:PATH += \';C:\\Users\\CEREBRENT PC\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\'; & \'C:\\Program Files\\Git\\bin\\bash.exe\' deploy.sh }"'
     }
 }

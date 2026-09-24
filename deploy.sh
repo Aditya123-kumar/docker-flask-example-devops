@@ -7,18 +7,20 @@ PROJECT_NAME="flask-prod"
 NGINX_CONFIG="nginx/prod.conf"
 STATE_FILE=".active_color"
 
-COMPOSE="/c/Users/CEREBRENT PC/AppData/Local/Programs/DockerDesktop/resources/bin/docker-compose.exe"
-
 dc() {
-  "$COMPOSE" -p "$PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
+  docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" "$@"
 }
+if [ -z "$APP_IMAGE" ]; then
+  echo "ERROR: APP_IMAGE is not set."
+  echo "Example: APP_IMAGE=localhost:5000/flask-app:test"
+  exit 1
+fi
+
 echo "======================================"
 echo " Zero Downtime Flask Deployment"
 echo "======================================"
-
-# --------------------------------------------------
-# Detect current version
-# --------------------------------------------------
+echo "Image: $APP_IMAGE"
+echo ""
 
 if [ -f "$STATE_FILE" ]; then
   CURRENT=$(cat "$STATE_FILE")
@@ -36,33 +38,14 @@ echo "Current version : $CURRENT"
 echo "New version     : $NEW"
 echo ""
 
-# --------------------------------------------------
-# Start infrastructure
-# --------------------------------------------------
-
 echo "[1/7] Starting PostgreSQL and Redis..."
-
 dc up -d postgres redis
 
-# --------------------------------------------------
-# Build application
-# --------------------------------------------------
-
-echo "[2/7] Building application..."
-
-dc build --no-cache "web-$NEW"
-
-# --------------------------------------------------
-# Start new version
-# --------------------------------------------------
+echo "[2/7] Pulling application image..."
+dc pull "web-$NEW"
 
 echo "[3/7] Starting $NEW version..."
-
 dc up -d "web-$NEW"
-
-# --------------------------------------------------
-# Health check
-# --------------------------------------------------
 
 echo "[4/7] Waiting for $NEW to become healthy..."
 
@@ -81,10 +64,6 @@ for i in {1..30}; do
   sleep 2
 done
 
-# --------------------------------------------------
-# Rollback if health check fails
-# --------------------------------------------------
-
 if [ "$HEALTHY" != "true" ]; then
   echo ""
   echo "Health check FAILED!"
@@ -96,10 +75,6 @@ if [ "$HEALTHY" != "true" ]; then
   exit 1
 fi
 
-# --------------------------------------------------
-# Switch Nginx traffic
-# --------------------------------------------------
-
 echo "[5/7] Switching traffic to $NEW..."
 
 sed -i "s/server web-$CURRENT:8000;/server web-$NEW:8000;/" "$NGINX_CONFIG"
@@ -107,12 +82,7 @@ sed -i "s/server web-$CURRENT:8000;/server web-$NEW:8000;/" "$NGINX_CONFIG"
 dc up -d nginx
 
 docker exec flask-nginx nginx -t
-
 docker exec flask-nginx nginx -s reload
-
-# --------------------------------------------------
-# Smoke test
-# --------------------------------------------------
 
 echo "[6/7] Testing application..."
 
@@ -135,10 +105,6 @@ else
   exit 1
 fi
 
-# --------------------------------------------------
-# Cleanup old version
-# --------------------------------------------------
-
 echo "[7/7] Removing old version..."
 
 dc stop "web-$CURRENT"
@@ -151,5 +117,6 @@ echo "======================================"
 echo " Deployment Successful!"
 echo "======================================"
 echo "Active version: $NEW"
+echo "Image: $APP_IMAGE"
 echo "Application: http://localhost:8081"
 echo "======================================"
