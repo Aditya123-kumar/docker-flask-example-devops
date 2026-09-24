@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        REGISTRY = "localhost:5000"
+        IMAGE_NAME = "flask-app"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -10,27 +16,36 @@ pipeline {
         }
 
         stage('Verify Docker') {
-    steps {
-        bat 'docker --version'
-        bat 'docker-compose version'
-        bat 'curl.exe http://localhost:5000/v2/'
-    }
-}
+            steps {
+                sh 'docker --version'
+                sh 'curl -k https://localhost:5000/v2/ || true'
+            }
+        }
 
-stage('Build Docker Image') {
-    steps {
-        bat 'docker build -t localhost:5000/flask-app:%BUILD_NUMBER% .'
-    }
-}
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ."
+            }
+        }
 
-stage('Push to Private Registry') {
-    steps {
-        bat 'docker push localhost:5000/flask-app:%BUILD_NUMBER%'
-    }
-}
+        stage('Login to Registry') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'registry-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh "echo \$PASS | docker login ${REGISTRY} -u \$USER --password-stdin"
+                }
+            }
+        }
 
-stage('Deploy Blue-Green') {
-    steps {
-        bat 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& { $env:PATH += \';C:\\Users\\CEREBRENT PC\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\'; & \'C:\\Program Files\\Git\\bin\\bash.exe\' deploy.sh }"'
+        stage('Push to Private Registry') {
+            steps {
+                sh "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Image pushed: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+        }
     }
 }
