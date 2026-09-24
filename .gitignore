@@ -216,3 +216,7 @@ flycheck_*.el
 /network-security.data
 
 .active_color
+
+auth/
+certs/
+registry-data/
