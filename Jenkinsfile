@@ -1,10 +1,11 @@
+```groovy
 pipeline {
     agent any
 
     environment {
-        REGISTRY = "localhost:5000"
-        IMAGE_NAME = "flask-app"
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        REGISTRY = 'localhost:5000'
+        IMAGE_NAME = 'flask-app'
+        IMAGE_TAG = '6'
     }
 
     stages {
@@ -18,34 +19,51 @@ pipeline {
         stage('Verify Docker') {
             steps {
                 bat 'docker --version'
-                bat 'curl -k https://localhost:5000/v2/ || true'
+                bat 'docker info'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat "docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                bat 'docker build -t %REGISTRY%/%IMAGE_NAME%:%IMAGE_TAG% .'
             }
         }
 
         stage('Login to Registry') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'registry-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    bat "echo \$PASS | docker login ${REGISTRY} -u \$USER --password-stdin"
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'registry-creds',
+                        usernameVariable: 'REGISTRY_USER',
+                        passwordVariable: 'REGISTRY_PASSWORD'
+                    )
+                ]) {
+                    bat '''
+                        echo %REGISTRY_PASSWORD% | docker login %REGISTRY% -u %REGISTRY_USER% --password-stdin
+                    '''
                 }
             }
         }
 
         stage('Push to Private Registry') {
             steps {
-                bat "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+                bat 'docker push %REGISTRY%/%IMAGE_NAME%:%IMAGE_TAG%'
             }
         }
     }
 
     post {
         success {
-            echo "Image pushed: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            echo '========================================'
+            echo 'SUCCESS: Docker image pushed successfully!'
+            echo '========================================'
+        }
+
+        failure {
+            echo '========================================'
+            echo 'ERROR: Pipeline failed!'
+            echo '========================================'
         }
     }
 }
+```
