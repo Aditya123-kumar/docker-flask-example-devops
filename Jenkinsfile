@@ -17,7 +17,7 @@ pipeline {
 
         stage('Verify Docker') {
             steps {
-                sh 'docker --version'
+                bat 'docker --version'
                 sh 'curl -k https://localhost:5000/v2/ || true'
             }
         }
