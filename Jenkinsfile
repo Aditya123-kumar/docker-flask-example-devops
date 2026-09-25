@@ -18,27 +18,27 @@ pipeline {
         stage('Verify Docker') {
             steps {
                 bat 'docker --version'
-                sh 'curl -k https://localhost:5000/v2/ || true'
+                bat 'curl -k https://localhost:5000/v2/ || true'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                bat "docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
         stage('Login to Registry') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'registry-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh "echo \$PASS | docker login ${REGISTRY} -u \$USER --password-stdin"
+                    bat "echo \$PASS | docker login ${REGISTRY} -u \$USER --password-stdin"
                 }
             }
         }
 
         stage('Push to Private Registry') {
             steps {
-                sh "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+                bat "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
     }
